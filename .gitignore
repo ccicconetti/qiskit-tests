@@ -127,3 +127,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+qpe
+Our_Qiskit_Functions.py
+.vscode
+.pylintrc
