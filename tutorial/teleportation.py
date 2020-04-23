@@ -1,13 +1,16 @@
-"""Teleportation example from Qiskit Textbook"""
+"""Teleportation example inspired from the Qiskit Textbook"""
 
 import math
 import random
-import numpy as np
 import matplotlib.pyplot as plt
 
-from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, execute, BasicAer, IBMQ
-from qiskit.visualization import plot_histogram, plot_bloch_multivector
-from qiskit.extensions import Initialize
+from qiskit import (
+    QuantumCircuit,
+    QuantumRegister,
+    ClassicalRegister,
+    execute,
+    BasicAer
+)
 
 from utils import NoiseModelWrapper
 
