@@ -71,8 +71,12 @@ def bloch_states(rho):
 def qft(N, print_circuit):
     """Return a circuit to compute the QFT for N qbits."""
 
+    assert N > 0
+
     qft_circuit = QuantumCircuit(N, name="QFT")
     if N == 3:
+        print("Special value N=3 for QFT circuit creation")
+
         # Handle qbit 2
         qft_circuit.h(2)
         qft_circuit.cu1(pi/2, 1, 2)
@@ -82,14 +86,23 @@ def qft(N, print_circuit):
         qft_circuit.h(1)
         qft_circuit.cu1(pi/2, 0, 1)
 
-        # Handle qqit 0
+        # Handle qbit 0
         qft_circuit.h(0)
 
         # Swap qbits 0 and 2
         qft_circuit.swap(0, 2)
     else:
-        raise Exception("QFT only implemented with 3 qbits")
-    
+        # Add Hadamard and rotation gates
+        for i in range(N):
+            cur = N - i - 1
+            qft_circuit.h(cur)
+            for j in range(cur):
+                qft_circuit.cu1(pi/2**(cur-j), j, cur)
+
+        # Swap qbits
+        for i in range(int(N/2)):
+            qft_circuit.swap(i, N-1-i)
+
     if print_circuit:
         print(qft_circuit.draw(output='text'))
 

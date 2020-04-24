@@ -25,7 +25,7 @@ from utils import (
 # Configuration
 #
 
-N = 3 # number of qbits
+N = 4 # number of qbits
 experiment_type = 'simulator-noise'
 shots = 1024
 num_encoded = random.randint(0, 2**N - 1)
