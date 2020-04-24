@@ -2,6 +2,7 @@
 
 import numpy as np
 from numpy import pi
+import operator
 
 from qiskit.providers.aer.noise import NoiseModel
 from qiskit import(
@@ -68,7 +69,24 @@ def bloch_states(rho):
 
     return ret
 
-def qft(N, print_circuit):
+def decode_message(result, print_message=False):
+    """Find an encoded message from count of probabilities."""
+
+    message_decoded = max(
+        result.get_counts().items(),
+        key=operator.itemgetter(1))[0]
+
+    tot_counts = sum(result.get_counts().values())
+
+    if print_message:
+        print("received message {} (prob {:.2f}%)".format(
+            message_decoded,
+            100 * float(result.get_counts()[message_decoded]) / tot_counts
+        ))
+
+    return message_decoded
+
+def qft(N, print_circuit=False):
     """Return a circuit to compute the QFT for N qbits."""
 
     assert N > 0

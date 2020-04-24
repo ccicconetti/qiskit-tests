@@ -13,7 +13,10 @@ from qiskit import (
     BasicAer
 )
 
-from utils import NoiseModelWrapper
+from utils import (
+    NoiseModelWrapper,
+    decode_message
+)
 
 #
 # Configuration
@@ -90,11 +93,4 @@ else:
     
     # Find measurement with maximum probability
     print(result.get_counts())
-
-    message_decoded = max(
-        result.get_counts().items(),
-        key=operator.itemgetter(1))[0]
-    print("received message {} (prob {}%)".format(
-        message_decoded,
-        100 * float(result.get_counts()[message_decoded]) / shots
-    ))
+    decode_message(result, print_message=True)

@@ -1,6 +1,5 @@
 """QFT example inspired from the Qiskit Textbook"""
 
-import operator
 import math
 import random
 # import matplotlib.pyplot as plt
@@ -18,7 +17,8 @@ from qiskit import (
 from utils import (
     NoiseModelWrapper,
     bloch_states,
-    qft
+    qft,
+    decode_message
 )
 
 #
@@ -122,11 +122,4 @@ else:
     
     # Find measurement with maximum probability
     print(result.get_counts())
-
-    message_decoded = max(
-        result.get_counts().items(),
-        key=operator.itemgetter(1))[0]
-    print("received message {} (prob {}%)".format(
-        message_decoded,
-        100 * float(result.get_counts()[message_decoded]) / shots
-    ))
+    decode_message(result, print_message=True)
