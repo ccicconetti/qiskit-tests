@@ -18,8 +18,10 @@ from qiskit.quantum_info import Pauli
 class NoiseModelWrapper():
     "Load noise model from IBMQ real quantum computer"
 
-    def __init__(self, ibmq_backend):
-        print("Building circuit with noise from '{}'".format(ibmq_backend))
+    def __init__(self, ibmq_backend, quiet=False):
+        if not quiet:
+            print("Building circuit with noise from '{}'".format(
+                ibmq_backend))
 
         # Build noise model from backend properties
         provider = IBMQ.load_account()
@@ -32,7 +34,7 @@ class NoiseModelWrapper():
         # Get basis gates from noise model
         self.basis_gates = self.noise_model.basis_gates
 
-    def execute(self, qc):
+    def execute(self, qc, shots=1024):
         "Execute simulation with noise"
 
         result = execute(
@@ -40,7 +42,8 @@ class NoiseModelWrapper():
             Aer.get_backend('qasm_simulator'),
             coupling_map=self.coupling_map,
             basis_gates=self.basis_gates,
-            noise_model=self.noise_model).result()
+            noise_model=self.noise_model,
+            shots=shots).result()
         return result
 
 def bloch_states(rho):
