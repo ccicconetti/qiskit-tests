@@ -40,7 +40,7 @@ if experiment_type == 'simulator-noise':
     noise_wrapper = NoiseModelWrapper('ibmq_essex')
 
 # Initialize circuit and registers
-qr = QuantumRegister(N)    # Protocol needs Bell pair of qubits
+qr = QuantumRegister(N)
 qc = QuantumCircuit(qr)
 
 # Prepare input based on the encoded number
