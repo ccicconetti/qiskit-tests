@@ -128,4 +128,14 @@ def qft(N, print_circuit=False):
         print(qft_circuit.draw(output='text'))
 
     return qft_circuit
-    
+
+# From Qiskit Textbook
+def qft_dagger(circ, n):
+    """n-qubit QFTdagger the first n qubits in circ"""
+
+    for qubit in range(n//2):
+        circ.swap(qubit, n-qubit-1)
+    for j in range(n):
+        for m in range(j):
+            circ.cu1(-pi/float(2**(j-m)), m, j)
+        circ.h(j)
