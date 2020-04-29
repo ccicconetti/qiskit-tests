@@ -1,9 +1,12 @@
 """Some utilities/wrappers for Qiskit"""
 
-import numpy as np
-from numpy import pi
 import operator
 
+import numpy as np
+from numpy import pi
+
+from qiskit.compiler import transpile
+from qiskit.tools.monitor import job_monitor
 from qiskit.providers.aer.noise import NoiseModel
 from qiskit import(
     execute,
@@ -44,6 +47,37 @@ class NoiseModelWrapper():
             basis_gates=self.basis_gates,
             noise_model=self.noise_model,
             shots=shots).result()
+        return result
+
+class IbmqWrapper():
+    "Wrapper to execute circuit on an IBMQ real quantum computer"
+
+    def __init__(self, ibmq_backend, quiet=False):
+        self.quiet = quiet
+
+        if not quiet:
+            print("Loading IBMQ backend '{}'".format(
+                ibmq_backend))
+
+        # load IBM account
+        self.backend = IBMQ.load_account().get_backend(ibmq_backend)
+
+    def execute(self, qc, shots=1024):
+        "Execute simulation"
+
+        qc_compiled = transpile(
+            qc,
+            backend=self.backend,
+            optimization_level=1)
+        if not self.quiet:
+            print(qc_compiled.draw(output='text'))
+
+        job = execute(
+            qc_compiled,
+            backend=self.backend,
+            shots=shots)
+        job_monitor(job)
+        result = job.result()
         return result
 
 def bloch_states(rho):
