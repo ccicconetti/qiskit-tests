@@ -134,3 +134,5 @@ Our_Qiskit_Functions.py
 .pylintrc
 
 results
+*.json
+*.map
