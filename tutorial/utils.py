@@ -1,11 +1,15 @@
 """Some utilities/wrappers for Qiskit"""
 
+from ast import literal_eval
+import json
 import operator
+from os import path
 
 import numpy as np
 from numpy import pi
 
 from qiskit.compiler import transpile
+from qiskit.transpiler import CouplingMap
 from qiskit.tools.monitor import job_monitor
 from qiskit.providers.aer.noise import NoiseModel
 from qiskit import(
@@ -21,21 +25,60 @@ from qiskit.quantum_info import Pauli
 class NoiseModelWrapper():
     "Load noise model from IBMQ real quantum computer"
 
-    def __init__(self, ibmq_backend, quiet=False):
+    def __init__(self, ibmq_backend, no_save_json=False, quiet=False):
+        """Load a noise model from either a local file or IBMQ"""
         if not quiet:
             print("Building circuit with noise from '{}'".format(
                 ibmq_backend))
 
-        # Build noise model from backend properties
-        provider = IBMQ.load_account()
-        backend = provider.get_backend(ibmq_backend)
-        self.noise_model = NoiseModel.from_backend(backend)
+        # If a file exists called like the backend (with a .json
+        # extension), then load the model from that.
+        # In this case, we also try to load a coupling map from
+        # a file with .map extension. If it does not exist, no
+        # worries, we just assume it is default (i.e., empty).
+        json_filename = '{}.json'.format(ibmq_backend)
+        coupling_map_filename = '{}.map'.format(ibmq_backend)
+        if path.exists(json_filename):
+            if not quiet:
+                print('Loading noise model from {}'.format(json_filename))
+            with open(json_filename, 'r') as infile:
+                noise_model_dict = json.load(infile)
+                self.noise_model = NoiseModel.from_dict(noise_model_dict)
 
-        # Get coupling map from backend
-        self.coupling_map = backend.configuration().coupling_map
+            self.coupling_map = None
+            if path.exists(coupling_map_filename):
+                if not quiet:
+                    print('Loading coupling map from {}'.format(coupling_map_filename))
+                with open(coupling_map_filename, 'r') as coupling_infile:
+                    self.coupling_map = CouplingMap(
+                        literal_eval(coupling_infile.read()))
 
-        # Get basis gates from noise model
-        self.basis_gates = self.noise_model.basis_gates
+        # Otherwise, load the noise model from IBMQ (requires)
+        # account properties to be stored in default location
+        # and save the noise model in a JSON file for future use,
+        # unless the no_save_json flag is set
+        else:
+            # Build noise model from backend properties
+            provider = IBMQ.load_account()
+            backend = provider.get_backend(ibmq_backend)
+            self.noise_model = NoiseModel.from_backend(backend)
+
+            # Get coupling map from backend
+            self.coupling_map = backend.configuration().coupling_map
+
+            # Save the model and coupling map (if not default) to file
+            if not no_save_json:
+                if not quiet:
+                    print('Saving to {} the noise model for future use'.format(
+                        json_filename))
+                with open(json_filename, 'w') as outfile:
+                    json.dump(self.noise_model.to_dict(True), outfile)
+                if self.coupling_map is not None:
+                    if not quiet:
+                        print('Saving to {} the coupling map for future use'.format(
+                            coupling_map_filename))
+                    with open(coupling_map_filename, 'w') as coupling_outfile:
+                        coupling_outfile.write(str(self.coupling_map))
 
     def execute(self, qc, shots=1024):
         "Execute simulation with noise"
@@ -44,7 +87,7 @@ class NoiseModelWrapper():
             qc,
             Aer.get_backend('qasm_simulator'),
             coupling_map=self.coupling_map,
-            basis_gates=self.basis_gates,
+            basis_gates=self.noise_model.basis_gates,
             noise_model=self.noise_model,
             shots=shots).result()
         return result

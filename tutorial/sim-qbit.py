@@ -1,6 +1,9 @@
-"""Simulate operations on one qbit"""
+"""Simulate operations on one qubit"""
 
 from math import pi, atan2, sqrt
+
+import matplotlib.pyplot as plt
+
 from qiskit import(
     QuantumCircuit,
     execute,
@@ -8,19 +11,20 @@ from qiskit import(
 from utils import NoiseModelWrapper, IbmqWrapper
 
 # Configuration
-shots = 1024
-steps = 20
+shots = 8*1024
+steps = 19
 angle_min = 0
 angle_max = pi
 verbose = False
-experiment_type = 'simulator-qasm'
+print_circuit_and_exit = False
+experiment_type = 'simulator-noise'
 
 assert experiment_type in ['ibmq', 'simulator-noise', 'simulator-qasm']
 
 # Load noisy gates, if required
 backend_wrapper = None
 if experiment_type == 'simulator-noise':
-    backend_wrapper = NoiseModelWrapper('ibmq_essex', quiet=not verbose)
+    backend_wrapper = NoiseModelWrapper('ibmq_armonk', quiet=not verbose)
 elif experiment_type == 'ibmq':
     backend_wrapper = IbmqWrapper('ibmq_essex', quiet=not verbose)
 
@@ -47,6 +51,12 @@ for i in range(steps):
     if verbose:
         print("#{} angle = {:.2f} degrees".format(i, angle * 180 / pi))
         print(qc.draw(output='text'))
+
+    if print_circuit_and_exit:
+        qc.draw(output='mpl')
+        plt.show()
+        break
+
 
     # Execution
     if experiment_type == 'simulator-qasm':
