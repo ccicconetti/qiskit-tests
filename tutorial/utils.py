@@ -20,17 +20,17 @@ from qiskit.quantum_info import Pauli
 class NoiseModelWrapper:
     "Load noise model from IBMQ real quantum computer"
 
-    def __init__(self, ibmq_backend, no_save=False, quiet=False):
+    def __init__(self, backend, project=None, no_save=False, quiet=False):
         """Load a noise model from either a local file or IBMQ"""
         if not quiet:
-            print("Building circuit with noise from '{}'".format(ibmq_backend))
+            print("Building circuit with noise from '{}'".format(backend))
 
         # If a file exists called like the backend, then load the model from that.
         # In this case, we also try to load a coupling map from
         # a file with .map extension. If it does not exist, no
         # worries, we just assume it is default (i.e., empty).
-        noise_filename = "{}.noise".format(ibmq_backend)
-        coupling_map_filename = "{}.map".format(ibmq_backend)
+        noise_filename = "{}.noise".format(backend)
+        coupling_map_filename = "{}.map".format(backend)
         if path.exists(noise_filename):
             if not quiet:
                 print("Loading noise model from {}".format(noise_filename))
@@ -46,14 +46,28 @@ class NoiseModelWrapper:
                         literal_eval(coupling_infile.read())
                     )
 
-        # Otherwise, load the noise model from IBMQ (requires)
+        # Otherwise, load the noise model from IBMQ (requires token)
         # account properties to be stored in default location
-        # and save the noise model for future use,
-        # unless the no_save flag is set
+        # and save the noise model for future use, unless the no_save flag is set
         else:
             # Build noise model from backend properties
             provider = IBMQ.load_account()
-            backend = provider.get_backend(ibmq_backend)
+
+            if project is None:
+                backend = provider.get_backend(backend)
+
+            else:
+                # load a specific project
+                (hub, group, project) = splitProjectInfo(project)
+                if not quiet:
+                    print(
+                        f"IBMQ backend (hub: {hub}, group: {group}, project: {project})"
+                    )
+                provider_project = IBMQ.get_provider(
+                    hub=hub, group=group, project=project
+                )
+                backend = provider_project.get_backend(backend)
+
             self.noise_model = NoiseModel.from_backend(backend)
 
             # Get coupling map from backend
@@ -111,10 +125,7 @@ class IbmqWrapper:
 
         else:
             # load a specific project
-            tokens = project.split(",")
-            if len(tokens) != 3:
-                raise RuntimeError(f"Invalid project: {project}")
-            (hub, group, project) = tokens
+            (hub, group, project) = splitProjectInfo(project)
             if not quiet:
                 print(f"IBMQ backend (hub: {hub}, group: {group}, project: {project})")
             provider_project = IBMQ.get_provider(hub=hub, group=group, project=project)
@@ -234,3 +245,12 @@ def qft_dagger(circ, n):
         for m in range(j):
             circ.cu1(-pi / float(2 ** (j - m)), m, j)
         circ.h(j)
+
+
+def splitProjectInfo(value: str):
+    """Split a comma-separated list of 3 values (hub,group,project)"""
+
+    tokens = value.split(",")
+    if len(tokens) != 3:
+        raise RuntimeError(f"Invalid project: {value}")
+    return tokens

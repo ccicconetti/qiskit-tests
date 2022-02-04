@@ -4,6 +4,7 @@ from qiskit import Aer
 from qiskit import IBMQ
 
 import argparse
+from tutorial.utils import splitProjectInfo
 
 
 def backend_configuration(backend):
@@ -54,10 +55,7 @@ else:
             )
 
     else:
-        tokens = args.project.split(",")
-        if len(tokens) != 3:
-            raise RuntimeError(f"Invalid option --project: {args.project}")
-        (hub, group, project) = tokens
+        (hub, group, project) = splitProjectInfo(args.project)
         print(f"IBMQ backends (hub: {hub}, group: {group}, project: {project})")
         paid_provider = IBMQ.get_provider(hub=hub, group=group, project=project)
         for backend in paid_provider.backends():
