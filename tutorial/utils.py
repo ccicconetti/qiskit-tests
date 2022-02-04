@@ -103,7 +103,8 @@ class IbmqWrapper():
                 ibmq_backend))
 
         # load IBM account
-        self.backend = IBMQ.load_account().get_backend(ibmq_backend)
+        self.provider = IBMQ.load_account()
+        self.backend = self.provider.get_backend(ibmq_backend)
 
     def execute(self, qc, shots=1024):
         "Execute simulation"
