@@ -1,7 +1,7 @@
 """Quantum phase estimation example inspired from the Qiskit Textbook"""
 
 import argparse
-import pickle
+import json
 from random import uniform
 
 # import matplotlib.pyplot as plt
@@ -9,6 +9,7 @@ from numpy import pi
 
 from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister, execute, BasicAer
 from qiskit.result import Result
+from tutorial.utils import splitProjectInfo
 
 # from qiskit.visualization import plot_bloch_multivector
 
@@ -138,7 +139,9 @@ if args.load == "":
     # Load noisy gates, if required
     noise_wrapper = None
     if args.experiment_type == "simulator-noise":
-        noise_wrapper = NoiseModelWrapper("ibmq_bogota", no_save=True)
+        noise_wrapper = NoiseModelWrapper(
+            args.backend, project=args.project, no_save=True
+        )
 
     # Initialize circuit and registers
     qr = QuantumRegister(N + 1)  # N ancillas + 1 phase estimation
@@ -189,17 +192,23 @@ if args.load == "":
 
     else:
         assert args.experiment_type == "real"
-        result = IbmqWrapper(args.backend).execute(qc, shots=args.shots).result()
+        result = (
+            IbmqWrapper(
+                args.backend, project=args.project, quiet=False, print_circuit=False
+            )
+            .execute(qc, shots=args.shots)
+            .result()
+        )
 
     assert result is not None
     if args.output != "":
-        with open(args.output, "wb") as outfile:
-            pickle.dump(result.to_dict(), outfile)
+        with open(args.output, "w") as outfile:
+            json.dump(result.to_dict(), outfile)
 
 else:
     # Load circuit
-    with open(args.load, "rb") as infile:
-        result = Result.from_dict(pickle.load(infile))
+    with open(args.load, "r") as infile:
+        result = Result.from_dict(json.load(infile))
 
         # Find measurement with maximum probability
         print(result.get_counts())
