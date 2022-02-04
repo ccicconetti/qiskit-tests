@@ -131,8 +131,8 @@ class IbmqWrapper:
             provider_project = IBMQ.get_provider(hub=hub, group=group, project=project)
             self.backend = provider_project.get_backend(backend)
 
-    def execute(self, qc, shots=1024):
-        "Execute simulation"
+    def execute_sync(self, qc, shots=1024):
+        "Execute simulation and wait for completion"
 
         qc_compiled = transpile(qc, backend=self.backend, optimization_level=1)
         if self.print_circuit:
@@ -142,6 +142,15 @@ class IbmqWrapper:
         job_monitor(job)
         result = job.result()
         return result
+
+    def execute_async(self, qc, shots=1024):
+        "Execute simulation and return the job"
+
+        qc_compiled = transpile(qc, backend=self.backend, optimization_level=1)
+        if self.print_circuit:
+            print(qc_compiled.draw(output="text"))
+
+        return execute(qc_compiled, backend=self.backend, shots=shots)
 
 
 def bloch_states(rho):
