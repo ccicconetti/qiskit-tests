@@ -12,7 +12,7 @@ from qiskit.result import Result
 
 # from qiskit.visualization import plot_bloch_multivector
 
-from utils import qft, qft_dagger, NoiseModelWrapper, decode_message
+from utils import qft, qft_dagger, NoiseModelWrapper, IbmqWrapper, decode_message
 
 
 class QpeRotOperator:
@@ -178,6 +178,7 @@ if args.load == "":
         print(qc.draw(output="text"))
 
     # Execute circuit
+    result = None
     if args.experiment_type == "simulator-qasm":
         backend = BasicAer.get_backend("qasm_simulator")
         result = execute(qc, backend, shots=args.shots).result()
@@ -186,6 +187,11 @@ if args.load == "":
         assert noise_wrapper is not None
         result = noise_wrapper.execute(qc, shots=args.shots)
 
+    else:
+        assert args.experiment_type == "real"
+        result = IbmqWrapper(args.backend).execute(qc, shots=args.shots).result()
+
+    assert result is not None
     if args.output != "":
         with open(args.output, "wb") as outfile:
             pickle.dump(result.to_dict(), outfile)
