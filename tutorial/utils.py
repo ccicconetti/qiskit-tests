@@ -96,21 +96,35 @@ class NoiseModelWrapper:
 class IbmqWrapper:
     "Wrapper to execute circuit on an IBMQ real quantum computer"
 
-    def __init__(self, ibmq_backend, quiet=False):
+    def __init__(self, backend, project=None, quiet=False, print_circuit=False):
         self.quiet = quiet
+        self.print_circuit = print_circuit
 
         if not quiet:
-            print("Loading IBMQ backend '{}'".format(ibmq_backend))
+            print("Loading IBMQ backend '{}'".format(backend))
 
         # load IBM account
-        self.provider = IBMQ.load_account()
-        self.backend = self.provider.get_backend(ibmq_backend)
+        provider = IBMQ.load_account()
+
+        if project is None:
+            self.backend = provider.get_backend(backend)
+
+        else:
+            # load a specific project
+            tokens = project.split(",")
+            if len(tokens) != 3:
+                raise RuntimeError(f"Invalid project: {project}")
+            (hub, group, project) = tokens
+            if not quiet:
+                print(f"IBMQ backend (hub: {hub}, group: {group}, project: {project})")
+            provider_project = IBMQ.get_provider(hub=hub, group=group, project=project)
+            self.backend = provider_project.get_backend(backend)
 
     def execute(self, qc, shots=1024):
         "Execute simulation"
 
         qc_compiled = transpile(qc, backend=self.backend, optimization_level=1)
-        if not self.quiet:
+        if self.print_circuit:
             print(qc_compiled.draw(output="text"))
 
         job = execute(qc_compiled, backend=self.backend, shots=shots)
