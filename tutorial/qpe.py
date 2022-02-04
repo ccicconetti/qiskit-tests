@@ -192,16 +192,12 @@ if args.load == "":
 
     else:
         assert args.experiment_type == "real"
-        result = (
-            IbmqWrapper(
-                args.backend, project=args.project, quiet=False, print_circuit=False
-            )
-            .execute(qc, shots=args.shots)
-            .result()
-        )
+        job = IbmqWrapper(
+            args.backend, project=args.project, quiet=False, print_circuit=False
+        ).execute_async(qc, shots=args.shots)
+        print(f"jobid {job.job_id()}")
 
-    assert result is not None
-    if args.output != "":
+    if result is not None and args.output != "":
         with open(args.output, "w") as outfile:
             json.dump(result.to_dict(), outfile)
 
