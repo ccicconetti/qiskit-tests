@@ -136,3 +136,5 @@ Our_Qiskit_Functions.py
 results
 *.json
 *.map
+
+*.noise

@@ -4,13 +4,8 @@ import math
 import random
 import matplotlib.pyplot as plt
 
-from qiskit import (
-    QuantumCircuit,
-    QuantumRegister,
-    ClassicalRegister,
-    execute,
-    BasicAer
-)
+from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, execute, BasicAer
+from qiskit.visualization import plot_bloch_multivector
 
 from utils import NoiseModelWrapper
 
@@ -18,9 +13,9 @@ from utils import NoiseModelWrapper
 # Configuration
 #
 
-experiment_type = 'simulator-noise'
+experiment_type = "simulator-statevector"
 shots = 1024
-bit_to_send = random.choice(['0', '1'])
+bit_to_send = random.choice(["0", "1"])
 
 #
 # Execution
@@ -28,13 +23,13 @@ bit_to_send = random.choice(['0', '1'])
 
 # Load noisy gates, if required
 noise_wrapper = None
-if experiment_type == 'simulator-noise':
-    noise_wrapper = NoiseModelWrapper('ibmq_essex')
+if experiment_type == "simulator-noise":
+    noise_wrapper = NoiseModelWrapper("ibmq_manila")
 
 # Initialize circuit and registers
-qr = QuantumRegister(3)    # Protocol uses 3 qubits
-crz = ClassicalRegister(1) # and 2 classical bits
-crx = ClassicalRegister(1) # in 2 different registers
+qr = QuantumRegister(3)  # Protocol uses 3 qubits
+crz = ClassicalRegister(1)  # and 2 classical bits
+crx = ClassicalRegister(1)  # in 2 different registers
 qc = QuantumCircuit(qr, crz, crx)
 
 # Initialize qbit 0 to be teleported to random state
@@ -51,12 +46,12 @@ qc.h(1)
 qc.cx(1, 2)
 
 # Decide which bit to teleport: |0> or |1>
-if bit_to_send == '0':
+if bit_to_send == "0":
     print("Sending a |0>")
-    qc.iden(0)
+    qc.id(0)
 else:
     print("Sending a |1>")
-    if bit_to_send != '1':
+    if bit_to_send != "1":
         raise Exception("Invalid bit_to_send value: {}".format(bit_to_send))
     qc.x(0)
 
@@ -77,23 +72,25 @@ qc.x(2).c_if(crx, 1)
 #
 # Test circuit
 #
-if experiment_type == 'simulator-statevector':
+if experiment_type == "simulator-statevector":
     # Print circuit
-    print(qc.draw(output='text'))
+    print(qc.draw(output="text"))
 
     # Run statevector simulation
-    backend = BasicAer.get_backend('statevector_simulator')
+    backend = BasicAer.get_backend("statevector_simulator")
     out_vector = execute(qc, backend).result().get_statevector(decimals=2)
     print(out_vector[2])
     plot_bloch_multivector(out_vector, title="Actual")
 
-    if bit_to_send == '1':
+    if bit_to_send == "1":
         theta = math.pi - theta
         phi = 2 * math.pi - phi
 
     exp_vector = [
-        complex(math.cos(theta/2), 0),
-        complex(math.cos(phi) * math.sin(theta/2), math.sin(phi) * math.sin(theta/2))
+        complex(math.cos(theta / 2), 0),
+        complex(
+            math.cos(phi) * math.sin(theta / 2), math.sin(phi) * math.sin(theta / 2)
+        ),
     ]
     plot_bloch_multivector(exp_vector, title="Expected")
 
@@ -108,10 +105,10 @@ else:
     crr = ClassicalRegister(1)
     qc.add_register(crr)
     qc.measure(2, 2)
-    print(qc.draw(output='text'))
+    print(qc.draw(output="text"))
 
-    if experiment_type == 'simulator-qasm':
-        backend = BasicAer.get_backend('qasm_simulator')
+    if experiment_type == "simulator-qasm":
+        backend = BasicAer.get_backend("qasm_simulator")
         result = execute(qc, backend, shots=shots).result()
         print(result.get_counts())
         count_0 = 0
@@ -123,15 +120,12 @@ else:
         else:
             print("Teleportation failed")
 
-    elif experiment_type == 'simulator-noise':
+    elif experiment_type == "simulator-noise":
         assert noise_wrapper is not None
         result = noise_wrapper.execute(qc)
         print(result.get_counts())
 
-        count = {'0': 0, '1': 0}
+        count = {"0": 0, "1": 0}
         for k, v in result.get_counts().items():
             count[k[0]] += v
-        print('Correct bit: {}%'.format(
-            int(round(count[bit_to_send]/shots*100)))
-            )
-
+        print("Correct bit: {}%".format(int(round(count[bit_to_send] / shots * 100))))
