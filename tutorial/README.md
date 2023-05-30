@@ -1,4 +1,6 @@
-# A tiny QUBO test
+# Qiskit scripts
+
+These scripts are used as part of the tutorial _From quantum computingto quantum networks_.
 
 ## Environment preparation
 
@@ -10,7 +12,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Execution
+## QUBO
+
+A tiny QUBO script using VQE.
 
 ```
 python qubo.py
@@ -75,7 +79,7 @@ VQE on Aer qasm simulator (no noise)  : -2.998
 VQE on Aer qasm simulator (with noise): -2.398
 ```
 
-Version used:
+## Version used
 
 | Package              | Version |
 | -------------------- | ------- |
