@@ -6,7 +6,7 @@ These scripts are used as part of the tutorial _From quantum computingto quantu
 
 ```
 git clone https://github.com/ccicconetti/qiskit-tests.git
-cd qubo
+cd qiskit-tests/tutorial
 virtualenv .venv -p python3
 source .venv/bin/activate
 pip install -r requirements.txt
