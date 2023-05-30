@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 
-import numpy as np
+import os
+import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, transpile
-from qiskit.quantum_info import Kraus, SuperOp
 from qiskit_aer import AerSimulator
 from qiskit.tools.visualization import plot_histogram
 
 # Import from Qiskit Aer noise module
 from qiskit_aer.noise import (
     NoiseModel,
-    QuantumError,
-    ReadoutError,
     pauli_error,
     depolarizing_error,
     thermal_relaxation_error,
@@ -44,5 +42,16 @@ def run_sim_noise(depth: int):
     return 1
 
 
+xdata = []
+ydata = []
 for depth in range(0, 51, 2):
-    print(f"depth {depth}: {run_sim_noise(depth)}")
+    xdata.append(depth)
+    ydata.append(run_sim_noise(depth))
+    print(f"depth {depth}: {ydata[-1]:.2f}")
+
+if os.getenv("PLT") is not None:
+    fig, ax = plt.subplots()
+    ax.plot(xdata, ydata)
+    ax.set(xlabel="Circuit depth", ylabel="Fraction of good experiments")
+    ax.grid()
+    plt.show()
